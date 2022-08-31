@@ -1,0 +1,19 @@
+ErrorDocument 404 https://api.sonnymijael.com/v1/kunst/error
+ErrorDocument 500 https://api.sonnymijael.com/v1/kunst/error
+
+RewriteEngine on
+
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteRule ^([^\.]+)/([^\.]+)$ $1.php?$2 [NC,L]
+
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+RewriteCond %{REQUEST_URI} ^/404/$
+RewriteRule ^(.*)$ /error.php [NC,L]
+
+RewriteCond %{REQUEST_URI} ^/500/$
+RewriteRule ^(.*)$ /error.php [NC,L]
+
+
+# RewriteRule ^(.*)/(.*)/(.*)/([^/]*).html$ comments.php?modulo=$1&seccion=$2&id=$3 [QSA]
