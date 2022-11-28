@@ -8,7 +8,7 @@
     $list_actions = [
         "delete",
         "update",
-        "save"
+        "create"
     ];
 
     foreach($list_actions as $action){

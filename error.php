@@ -6,5 +6,5 @@
   header('Access-Control-Allow-Methods: PUT, GET, POST, DELETE, OPTIONS');
   header('Content-Type: application/json');
 
-  echo json_encode([ 'error' => 'verifica que la direccion que deseas consultar sea correcta' ]);
+  echo json_encode([ '505' => 'Internal server error' ]);
 ?>

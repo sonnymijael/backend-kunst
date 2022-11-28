@@ -1,85 +1,105 @@
 <?php
-  require("Conexion.php");
+  require("Connection.php");
 
   class Customer{
     private $id;
+    private $name;
+    private $surname;
     private $email;
+    private $phone;
     private $password;
 
-    public function __construct(){
-      // login first
-      // register first callback
-    }
+    public function setId($id){ $this->id = $id; }
+    public function setName($name){ $this->name = $name; }
+    public function setSurname($surname){ $this->surname = $surname; }
+    public function setEmail($email){ $this->email = $email; }
+    public function setPhone($phone){ $this->phone = $phone; }
+    public function setPassword($password){ $this->password = $password; }
 
-    public function setEmail($email){
-      $this->email = $email;
-    }
-
-    public function setPassword($password){
-      $this->password = $password;
-    }
-
-    public function getResponse($status){
+    public function getResponse($status = false){
 			if($status) return array('status' => true);
 			else return array('status' => false);
 		}
+    
+    protected function handle_verify_password($currentPassDB){
+      return $this->getResponse(password_verify($this->password, $currentPassDB));
+    }
 
-    // Functions to basic { update,  delete, register }
-    protected function update(){
-      // update customer { name, surname, email, phone }
+    protected function handle_email_exist(){
+      $connection = new Connection();
+       $request = $connection->prepare(
+        "SELECT email FROM `Customer` WHERE email = :email Limit 1"
+      );
+      $request->bindParam(":email", $this->email);
+      $request->execute();      
+      return ($request->fetchColumn() === $this->email ? true : false);
     }
 
     public function register(){
-      // object of connection to database
-      $conexion = new Conexion();
-
-      $consulta = $conexion->prepare("
-        INSERT INTO 
-          `Customer` 
-            (`id`, `email`, `password`) 
-          VALUES 
-            (NULL, :email, :password);
-      ");
-      $consulta->bindParam(":email", $this->email);
-      $consulta->bindParam(":password", password_hash( $this->password, PASSWORD_DEFAULT ));
-      $consulta->execute();
-      if($conexion->lastInsertId() === "0"){
-        return $this->getResponse(false);
-      }else{
-        return $this->getResponse(true);
-      }
+      if($this->handle_email_exist()) return array('status' => 'El email ya existe');
+      $connection = new Connection();
+      $request = $connection->prepare(
+        "INSERT INTO `Customer` (`id`, `name`, `surname`, `email`, `phone`, `password`) VALUES (NULL, :name, :surname, :email, :phone, :password)"
+      );
+      $request->bindParam(':name', $this->name);
+      $request->bindParam(':surname', $this->surname);
+      $request->bindParam(':email', $this->email);
+      $request->bindParam(':phone', $this->phone);
+      $request->bindParam(':password', password_hash( $this->password, PASSWORD_DEFAULT ));
+      $request->execute();
+      return $this->getResponse(($connection->lastInsertId() != "0" ? True : False ));
+    }
+    
+    public function update(){
+      $connection = new Connection();
+      $request = $connection->prepare(
+        "UPDATE `Customer` SET name = :name, surname = :surname, phone = :phone WHERE email = :email"
+      );
+      $request->bindParam(':name', $this->name);
+      $request->bindParam(':surname', $this->surname);
+      $request->bindParam(':phone', $this->phone);
+      $request->bindParam(':email', $this->email);
+      $request->execute();
+      return $this->getResponse($request->rowCount());
     }
 
-    // Functions to session { login, logout }
+    public function delete(){
+      $connection = new Connection();
+      $request = $connection->prepare(
+        "DELETE FROM `Customer` WHERE email = :email"
+      );
+      $request->bindParam(':email', $this->email);
+      $request->execute();
+      return $this->getResponse($request->rowCount());
+    }
+
     public function login(){
-       $conexion = new Conexion();
-       $consulta = $conexion->prepare("
-        SELECT password FROM 
-          `Customer` 
-            WHERE email = :email 
-            Limit 1
-      ");
-      $consulta->bindParam(":email", $this->email);
-      $consulta->execute();      
-      return $this->handleVerifyPassword($consulta->fetchColumn());
+       $connection = new Connection();
+       $request = $connection->prepare(
+        "SELECT password FROM `Customer` WHERE email = :email Limit 1"
+      );
+      $request->bindParam(":email", $this->email);
+      $request->execute();
+      return $this->handle_verify_password($request->fetchColumn());
     }
 
-    public function logout(){
-      // logout function $status = false
+    public function getById(){
+      $connection = new Connection();
+      $request = $connection->prepare(
+        "SELECT * FROM `Customer` WHERE id = :id"
+      );
+      $request->bindParam(':id', $this->id);
+      $request->execute();
+      return $request->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getAll(){
-      $conexion = new Conexion();
-      $consulta = $conexion->prepare("
-       SELECT * FROM 
-         `Customer` 
-      ");
-      $consulta->execute(); 
-      return $consulta->fetchAll(PDO::FETCH_ASSOC);     
-    }
-
-    // Functions to protected and verify session or information
-    protected function handleVerifyPassword($currentPassDB){
-      return $this->getResponse(password_verify($this->password, $currentPassDB));
+      $connection = new Connection();
+      $request = $connection->prepare(
+        "SELECT * FROM `Customer`"
+      );
+      $request->execute(); 
+      return $request->fetchAll(PDO::FETCH_ASSOC);     
     }
   }
+?>

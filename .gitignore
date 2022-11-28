@@ -1,0 +1,5 @@
+# Protocolos ftp
+.vscode/
+.vscode
+# Archivo de conexiones a la base de datos
+class/Connection.php
